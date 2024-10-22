@@ -41,6 +41,7 @@ score_behind = 0
 score_power = 0
 skudd_mengde = 1
 enemy_mengde = 5
+power_up_scaling = 50
 
 "powerups"
 amount_of_powerups = 5
@@ -255,8 +256,10 @@ class Enemy(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.speed = random.randrange(1, 3)
         self.spawn = random.randrange(1,5)
-        self.hitpoints = 2 #TODO
-        self.max_hitpoints = 2 #TODO
+        self.hitpoints = 2
+        #TODO
+        self.max_hitpoints = 2
+        #TODO
 
         if self.spawn == 1:
             self.rect.x = (0 - self.rect.width)
@@ -275,6 +278,7 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.y = (height + self.rect.height)
 
     def update(self):
+        self.draw_health_bar()
         if self.spawn == 1:
             self.rect.x += self.speed
             if self.rect.x >= width:
@@ -295,7 +299,6 @@ class Enemy(pygame.sprite.Sprite):
             if self.rect.y <= 0:
                 sprite_enemy.remove(self)
 
-        self.draw_health_bar()
 
         if self.hitpoints <= 0:
             self.kill()
@@ -304,15 +307,14 @@ class Enemy(pygame.sprite.Sprite):
 
     def draw_health_bar(self):
         bar_width = self.rect.width
-        bar_height = 5
+        bar_height = 50
         fill = (self.hitpoints/self.max_hitpoints) * bar_width
         outline_rect = pygame.Rect(self.rect.x, self.rect.y + self.rect.height + 2, bar_width, bar_height)
         fill_rect = pygame.Rect(self.rect.x, self.rect.y + self.rect.height + 2, fill, bar_height)
 
-        pygame.draw.rect(pygame.display.get_surface(), (red), fill_rect)
-        pygame.draw.rect(pygame.display.get_surface(), (white), outline_rect, 1)
+        pygame.draw.rect(screen, (red), fill_rect)
+        pygame.draw.rect(screen, (white), outline_rect, 1)
 
-        print("hi")
 
 
 class Boarders(pygame.sprite.Sprite):
@@ -536,9 +538,9 @@ while game_loop:
         enemy_mengde += 1
         score_behind -= 33
 
-    if score_power >= 50:
+    if score_power >= power_up_scaling:
         sprite_powerups.add(Powerups(random.randrange(1,amount_of_powerups+1)))
-        score_power -= 50
+        score_power -= power_up_scaling
 
     keys = pygame.key.get_pressed()
     if keys[pygame.K_d]:
