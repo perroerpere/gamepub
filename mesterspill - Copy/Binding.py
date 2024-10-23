@@ -7,7 +7,6 @@ black = (0, 0, 0)
 red = (255, 0, 0)
 green = (0, 255, 0)
 blue = (0, 0, 255)
-lime = (0, 255, 0)
 yellow = (255, 255, 0)
 cyan = (0, 255, 255)
 fuchsia = (255, 0, 255)
@@ -18,6 +17,7 @@ olive = (128, 128, 0)
 purple = (128, 0, 128)
 teal = (0, 128, 128)
 navy = (0, 0, 128)
+brown = (150, 75, 0)
 
 background = pygame.image.load("GameBackground.jpg")
 
@@ -32,7 +32,7 @@ pygame.key.set_repeat(True)
 times_hit = 0
 health_points = 150
 attack_speed = 100
-enemy_size = 100
+enemy_size = 5
 bullet_size = 25
 player_damage = 1
 
@@ -155,11 +155,11 @@ def reload():
         skudd_mengde += 1
 
 
-def update_sycle():
+def update_sycle(player_x, player_y):
     sprite_nuke.update()
     player_sprite.update()
     sprite_powerups.update()
-    sprite_enemy.update()
+    sprite_enemy.update(player_x, player_y)
     player.update()
     skudd_sprite.update()
 
@@ -256,7 +256,7 @@ class Enemy(pygame.sprite.Sprite):
         self.image = pygame.Surface((enemy_size, enemy_size))
         self.image.fill(black)
         self.rect = self.image.get_rect()
-        self.speed = random.randrange(1, 3)
+        self.speed = 1
         self.spawn = random.randrange(1,5)
         self.hitpoints = 2
         #TODO
@@ -279,28 +279,16 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.x = random.randrange(0, width - self.image.get_size()[1])
             self.rect.y = (height + self.rect.height)
 
-    def update(self):
-        self.draw_health_bar()
-        if self.spawn == 1:
-            self.rect.x += self.speed
-            if self.rect.x >= width:
-                sprite_enemy.remove(self)
+    def update(self, player_x, player_y):
+        print(player_x, player_y)
 
-        if self.spawn == 2:
-            self.rect.y += self.speed
-            if self.rect.y >= height:
-                sprite_enemy.remove(self)
-
-        if self.spawn == 3:
+        if self.rect.x > player_x:
             self.rect.x -= self.speed
-            if self.rect.x <= 0:
-                sprite_enemy.remove(self)
+        else: self.rect.x += self.speed
 
-        if self.spawn == 4:
+        if self.rect.y > player_y:
             self.rect.y -= self.speed
-            if self.rect.y <= 0:
-                sprite_enemy.remove(self)
-
+        else: self.rect.y += self.speed
 
         if self.hitpoints <= 0:
             self.kill()
@@ -318,12 +306,24 @@ class Enemy(pygame.sprite.Sprite):
         pygame.draw.rect(screen, (white), outline_rect, 1)
 
 
+class Obstacle(pygame.sprite.Sprite):
+    def __init__(self, width, height, screen_width, screen_height):
+        super().__init__()
+        self.image = pygame.Surface((width,height))
+        self.image.fill(red)
+        self.rect = self.image.get_rect()
+        self.rect.x = screen_height
+        self.rect.y = screen_width
+
+    def update(self):
+        pass
+
 
 class Boarders(pygame.sprite.Sprite):
     def __init__(self, brd_width, brd_height, brd_x, brd_y):
         pygame.sprite.Sprite.__init__(self)
         self.image = pygame.Surface((brd_width, brd_height))
-        self.image.fill(red)
+        self.image.fill(brown)
         self.rect = self.image.get_rect()
         self.rect.x = brd_x
         self.rect.y = brd_y
@@ -503,16 +503,16 @@ player = Player()
 player_sprite.add(player)
 
 '#boarders'
-boarder1 = Boarders(width, 20, 0, 1000)
+boarder1 = Boarders(width, 200, 0, height - 25)
 boarder_sprite1.add(boarder1)
 
-boarder2 = Boarders(width, 20, 0, -20)
+boarder2 = Boarders(width, 25, 0, 0)
 boarder_sprite2.add(boarder2)
 
-boarder3 = Boarders(20, height, -20, 0)
+boarder3 = Boarders(25, height, 0, 0)
 boarder_sprite3.add(boarder3)
 
-boarder4 = Boarders(20, height, 1500, 0)
+boarder4 = Boarders(25, height, width-25, 0)
 boarder_sprite4.add(boarder4)
 '#boarders'
 
@@ -623,13 +623,18 @@ while game_loop:
         player.moving_right = False
 
     '#updates'
-    update_sycle()
+    player_x, player_y = player.get_pos()
+    update_sycle(player_x, player_y)
     '#updates'
 
     '#draw'
     sprite_nuke.draw(screen)
     screen.blit(background, (0, 0))
     sprite_powerups.draw(screen)
+    boarder_sprite1.draw(screen)
+    boarder_sprite2.draw(screen)
+    boarder_sprite3.draw(screen)
+    boarder_sprite4.draw(screen)
     player_sprite.draw(screen)
     skudd_sprite.draw(screen)
     sprite_enemy.draw(screen)
