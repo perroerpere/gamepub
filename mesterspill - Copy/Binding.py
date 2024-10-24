@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import math
 
 white = (255, 255, 255)
 black = (0, 0, 0)
@@ -32,7 +33,7 @@ pygame.key.set_repeat(True)
 times_hit = 0
 health_points = 150
 attack_speed = 100
-enemy_size = 5
+enemy_size = 50
 bullet_size = 25
 player_damage = 1
 
@@ -42,6 +43,7 @@ score_power = 0
 skudd_mengde = 1
 enemy_mengde = 5
 power_up_scaling = 50
+orbital_distance = 200
 
 "powerups"
 amount_of_powerups = 5
@@ -162,6 +164,7 @@ def update_sycle(player_x, player_y):
     sprite_enemy.update(player_x, player_y)
     player.update()
     skudd_sprite.update()
+    orbital_sprite.update(player_x, player_y)
 
 
 def losegame():
@@ -280,13 +283,12 @@ class Enemy(pygame.sprite.Sprite):
             self.rect.y = (height + self.rect.height)
 
     def update(self, player_x, player_y):
-        print(player_x, player_y)
 
-        if self.rect.x > player_x:
+        if self.rect.x > player_x+45:
             self.rect.x -= self.speed
         else: self.rect.x += self.speed
 
-        if self.rect.y > player_y:
+        if self.rect.y > player_y+45:
             self.rect.y -= self.speed
         else: self.rect.y += self.speed
 
@@ -428,6 +430,30 @@ class Skudd(pygame.sprite.Sprite):
                 times_hit -= 1
 
 
+class Orbital(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((bullet_size,bullet_size))
+        self.image.fill(red)
+        self.rect = self.image.get_rect()
+        self.angle = 0
+        self.radius = 0
+        self.speed = 0
+
+    def update(self, player_x, player_y):
+        self.radius = orbital_distance
+        self.speed = 5 / orbital_distance
+        self.angle += self.speed
+        self.rect.x = (player_x + 50) + self.radius * math.cos(self.angle) - self.rect.width / 2
+        self.rect.y = (player_y + 50) + self.radius * math.sin(self.angle) - self.rect.height / 2
+
+        kill_enemy = pygame.sprite.spritecollide(self, sprite_enemy, True)
+        if kill_enemy:
+            addscore(1)
+
+
+
+
 class Powerups(pygame.sprite.Sprite):
     def __init__(self, power):
         pygame.sprite.Sprite.__init__(self)
@@ -493,6 +519,8 @@ player_sprite = pygame.sprite.Group()
 
 skudd_sprite = pygame.sprite.Group()
 
+orbital_sprite = pygame.sprite.Group()
+
 sprite_enemy = pygame.sprite.Group()
 
 sprite_powerups = pygame.sprite.Group()
@@ -516,6 +544,7 @@ boarder4 = Boarders(25, height, width-25, 0)
 boarder_sprite4.add(boarder4)
 '#boarders'
 
+orbital_sprite.add(Orbital())
 
 main_menu()
 
@@ -545,6 +574,7 @@ while game_loop:
         score_power -= power_up_scaling
 
     keys = pygame.key.get_pressed()
+
     if keys[pygame.K_d]:
         player.moving_right = True
     else:
@@ -591,7 +621,8 @@ while game_loop:
 
     get_hit = pygame.sprite.spritecollide(player, sprite_enemy, False)
     if get_hit and shield_power_up <= 0:
-        times_hit += 1
+        pass
+        #times_hit += 1
 
     if times_hit == (health_points+1):
         losegame()
@@ -624,6 +655,7 @@ while game_loop:
 
     '#updates'
     player_x, player_y = player.get_pos()
+
     update_sycle(player_x, player_y)
     '#updates'
 
@@ -639,6 +671,7 @@ while game_loop:
     skudd_sprite.draw(screen)
     sprite_enemy.draw(screen)
     health_sprite.draw(screen)
+    orbital_sprite.draw(screen)
     scoreboard()
     health_number_text(health_points-times_hit)
     '#draw'

@@ -1,0 +1,13 @@
+boss per 500 kills
+
+flere powerups
+
+hp system der du har x hp og mister 1 hp hver gang du blir hitta
+
+gjøre boarders om til obstacles der spilleren blir flyttet 1 frame tilbake om den treffer
+
+fikse hp og cappe antall enemy som kan være på skjermen for å forhindre at skjermen blir dekket
+
+enemy blir sterkere > enemy blir flere
+
+se om jeg kan gjøre at fiender "følger spilleren" passivt, men ikke chaser ned.

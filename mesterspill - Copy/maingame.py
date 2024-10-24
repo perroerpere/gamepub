@@ -1,6 +1,7 @@
 import pygame
 import sys
 import random
+import math
 
 white = (255, 255, 255)
 black = (0, 0, 0)
@@ -41,10 +42,12 @@ score_behind = 0
 score_power = 0
 skudd_mengde = 1
 enemy_mengde = 5
-power_up_scaling = 50
+power_up_scaling = 5
+orbital_distance = 100
+orbital_speed = 5
 
 "powerups"
-amount_of_powerups = 5
+amount_of_powerups = 6
 
 lifesteal_power_up = 0
 
@@ -53,6 +56,8 @@ trippleshot_power_up = 0
 piercing_power_up = 0
 
 total_nuke_power_up = 0
+
+orbital_power_up = 0
 
 attack_speed_power_up = 0
     #TODO
@@ -155,13 +160,14 @@ def reload():
         skudd_mengde += 1
 
 
-def update_sycle():
+def update_sycle(player_x, player_y):
     sprite_nuke.update()
     player_sprite.update()
     sprite_powerups.update()
     sprite_enemy.update()
     player.update()
     skudd_sprite.update()
+    orbital_sprite.update(player_x, player_y)
 
 
 def losegame():
@@ -216,6 +222,19 @@ def main_menu():
                     pygame.quit()
                     sys.exit()
 
+def add_orbital():
+    global orbital_distance
+    global orbital_speed
+    global orbital_power_up
+    if orbital_power_up < 10:
+        orbital_sprite.add(Orbital())
+        if orbital_distance < 300:
+            orbital_distance += 50
+        else:
+            orbital_speed += 1
+        orbital_power_up += 1
+
+
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -223,7 +242,7 @@ class Player(pygame.sprite.Sprite):
         self.image = pygame.image.load("mesteren.png")
         self.rect = self.image.get_rect()
         self.rect.center = (width / 2, height / 2)
-        self.speed = 1
+        self.speed = 2
 
         self.moving_right = False
         self.moving_left = False
@@ -428,6 +447,28 @@ class Skudd(pygame.sprite.Sprite):
                 times_hit -= 1
 
 
+class Orbital(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((bullet_size,bullet_size))
+        self.image.fill(red)
+        self.rect = self.image.get_rect()
+        self.angle = 0
+        self.radius = 0
+        self.speed = 0
+
+    def update(self, player_x, player_y):
+        self.radius = orbital_distance
+        self.speed = orbital_speed / orbital_distance
+        self.angle += self.speed
+        self.rect.x = (player_x + 50) + self.radius * math.cos(self.angle) - self.rect.width / 2
+        self.rect.y = (player_y + 50) + self.radius * math.sin(self.angle) - self.rect.height / 2
+
+        kill_enemy = pygame.sprite.spritecollide(self, sprite_enemy, True)
+        if kill_enemy:
+            addscore(1)
+
+
 class Powerups(pygame.sprite.Sprite):
     def __init__(self, power):
         pygame.sprite.Sprite.__init__(self)
@@ -443,6 +484,8 @@ class Powerups(pygame.sprite.Sprite):
             self.image.fill(yellow)
         if self.power == 5:
             self.image.fill(teal)
+        if self.power == 6:
+            self.image.fill(purple)
 
         self.rect = self.image.get_rect()
         self.speed = 2
@@ -480,6 +523,10 @@ class Powerups(pygame.sprite.Sprite):
                 shield_power_up += 1500
                 player.update_image_shield()
 
+            if self.power == 6:
+                add_orbital()
+
+
 
 boarder_sprite1 = pygame.sprite.Group()
 
@@ -492,6 +539,8 @@ boarder_sprite4 = pygame.sprite.Group()
 player_sprite = pygame.sprite.Group()
 
 skudd_sprite = pygame.sprite.Group()
+
+orbital_sprite = pygame.sprite.Group()
 
 sprite_enemy = pygame.sprite.Group()
 
@@ -591,7 +640,8 @@ while game_loop:
 
     get_hit = pygame.sprite.spritecollide(player, sprite_enemy, False)
     if get_hit and shield_power_up <= 0:
-        times_hit += 1
+        #times_hit += 1
+        pass #TODO
 
     if times_hit == (health_points+1):
         losegame()
@@ -623,7 +673,8 @@ while game_loop:
         player.moving_right = False
 
     '#updates'
-    update_sycle()
+    player_x, player_y = player.get_pos()
+    update_sycle(player_x, player_y)
     '#updates'
 
     '#draw'
@@ -634,6 +685,7 @@ while game_loop:
     skudd_sprite.draw(screen)
     sprite_enemy.draw(screen)
     health_sprite.draw(screen)
+    orbital_sprite.draw(screen)
     scoreboard()
     health_number_text(health_points-times_hit)
     '#draw'
